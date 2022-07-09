@@ -1,0 +1,16 @@
+title: GMTK Game Jam 2022 - YourWaifuIsALie
+email: YourWaifuIsALie@gmail.com
+description: >-
+  Blog and documentation for GMTK Game Jam 2022 attempt
+baseurl: "/gmtk-jam-2022"
+url: "yourwaifuisalie.github.io"
+twitter_username: YourWaifuIsALie
+github_username:  YourWaifuIsALie
+
+
+remote_theme: pages-themes/midnight@v0.2.0
+plugins:
+- jekyll-remote-theme
+- jekyll-sitemap
+
+category-list: [blog, docs, site]
