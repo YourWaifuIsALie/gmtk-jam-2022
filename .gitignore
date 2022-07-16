@@ -1,4 +1,8 @@
 # Imported Unity assets
+TextMesh\ Pro/
+
+# Temporary ignore until properly used
+docs/media/
 
 # VSCODE
 .vscode/*
