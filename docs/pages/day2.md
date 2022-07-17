@@ -3,6 +3,7 @@ title: Day 2
 date: 2022-09-16
 categories: [blog]
 layout: custom
+order: 4
 ---
 # GMTK Game Jam 2022: {{ page.title }}
 {{ page.date | date: '%B %d, %Y' }}

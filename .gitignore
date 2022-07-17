@@ -2,9 +2,9 @@
 TextMesh\ Pro/
 
 # Temporary ignore until properly used
-docs/media/
 Sound/
 *.png
+[Bb]uild*/
 
 # VSCODE
 .vscode/*

@@ -25,8 +25,10 @@ public class PlayerTurtle : MonoBehaviour
     [SerializeField]
     private CinemachineVirtualCamera turtleCamera;
 
+    [SerializeField]
+    private bool hasJetpack = false;
+
     private bool isActive;
-    private bool hasJetpack;
     private bool needsImpulse;
     private bool isTilted;
     private bool isFalling;
@@ -39,16 +41,20 @@ public class PlayerTurtle : MonoBehaviour
     private Vector2 acceleration;
     private Rigidbody2D rigidBody;
     private int FALLWAIT = 2; // How long grounded 'till not falling (i.e. not rolling down a mountain)
-    private int MAXOFFSET = 80;
-    private int MINOFFSET = 20;
+    private int MAXOFFSET = 60;
+    private int MINOFFSET = 25;
+
+    public bool isCameraZoomed;
+    public bool isCameraLocked;
 
     void Start()
     {
         isActive = false;
-        hasJetpack = true; // TODO set back to false
         needsImpulse = false;
         isTilted = false;
         isFalling = false;
+        isCameraZoomed = true;
+        isCameraLocked = false;
         velocity = new Vector2();
         acceleration = new Vector2();
         rigidBody = GetComponent<Rigidbody2D>();
@@ -122,11 +128,8 @@ public class PlayerTurtle : MonoBehaviour
                     sfx.Play();
                 animationController.SetBool("isFlying", true);
                 EventController.current.SoundEvent($"{ConfigController.SOUNDENGINE}", $"{EventController.PLAY}", 0.8f, true);
-                // Zoom out while flying
-                var cameraTransposer = turtleCamera.GetCinemachineComponent<CinemachineTransposer>();
-                Vector3 newOffset = cameraTransposer.m_FollowOffset;
-                newOffset.z += newOffset.z < MAXOFFSET ? 0.5f : 0;
-                cameraTransposer.m_FollowOffset = newOffset;
+                if (!isCameraLocked)
+                    isCameraZoomed = false;
             }
             else
             {
@@ -134,15 +137,30 @@ public class PlayerTurtle : MonoBehaviour
                     sfx.Stop();
                 animationController.SetBool("isFlying", false);
                 EventController.current.SoundEvent($"{ConfigController.SOUNDENGINE}", $"{EventController.STOP}", 0.8f, true);
-                // Zoom in while not
-                var cameraTransposer = turtleCamera.GetCinemachineComponent<CinemachineTransposer>();
-                Vector3 newOffset = cameraTransposer.m_FollowOffset;
-                newOffset.z += newOffset.z > MINOFFSET ? -0.2f : 0;
-                cameraTransposer.m_FollowOffset = newOffset;
+                if (!isCameraLocked)
+                    isCameraZoomed = true;
+
             }
         }
         else
         {
+        }
+
+        if (isCameraZoomed)
+        {
+            // Zoom in while not
+            var cameraTransposer = turtleCamera.GetCinemachineComponent<CinemachineTransposer>();
+            Vector3 newOffset = cameraTransposer.m_FollowOffset;
+            newOffset.z += newOffset.z > MINOFFSET ? -0.2f : 0;
+            cameraTransposer.m_FollowOffset = newOffset;
+        }
+        else
+        {
+            // Zoom out while flying
+            var cameraTransposer = turtleCamera.GetCinemachineComponent<CinemachineTransposer>();
+            Vector3 newOffset = cameraTransposer.m_FollowOffset;
+            newOffset.z += newOffset.z < MAXOFFSET ? 0.5f : 0;
+            cameraTransposer.m_FollowOffset = newOffset;
         }
 
     }
@@ -213,53 +231,57 @@ public class PlayerTurtle : MonoBehaviour
 
         if (action == EventController.PRESS)
         {
-            movementCommands += 1;
-            if (id == EventController.LEFT)  // Left is right and right is left, oops
+            if (id == EventController.LEFT || id == EventController.RIGHT)
             {
-                velocity = Vector2.right;
-                if (isGrounded())
-                    facing = "left";
-            }
-            else if (id == EventController.RIGHT)
-            {
-                velocity = Vector2.left;
-                if (isGrounded())
-                    facing = "right";
-            }
-
-            if (id == EventController.FLY)
-                isFlying = true;
-        }
-        // if (this.hasJetpack)
-
-        if (action == EventController.RELEASE)
-        {
-            movementCommands -= 1;
-            if (movementCommands == 0)
-                velocity = Vector2.zero;
-            else if (movementCommands == 1)
-            {
-                needsImpulse = true;
-                if (id == EventController.LEFT) // Other button is held, reverse
-                {
-                    velocity = Vector2.left;
-                    if (isGrounded())
-                        facing = "right";
-                }
-                else
+                movementCommands += 1;
+                if (id == EventController.LEFT)  // Left is right and right is left, oops
                 {
                     velocity = Vector2.right;
                     if (isGrounded())
                         facing = "left";
                 }
+                else if (id == EventController.RIGHT)
+                {
+                    velocity = Vector2.left;
+                    if (isGrounded())
+                        facing = "right";
+                }
             }
-            else
+            if (id == EventController.FLY && hasJetpack)
+                isFlying = true;
+        }
+
+        if (action == EventController.RELEASE)
+        {
+            if (id == EventController.LEFT || id == EventController.RIGHT)
             {
-                velocity = Vector2.zero;
-                movementCommands = 0;
+                movementCommands -= 1;
+                if (movementCommands == 0)
+                    velocity = Vector2.zero;
+                else if (movementCommands == 1)
+                {
+                    needsImpulse = true;
+                    if (id == EventController.LEFT) // Other button is held, reverse
+                    {
+                        velocity = Vector2.left;
+                        if (isGrounded())
+                            facing = "right";
+                    }
+                    else
+                    {
+                        velocity = Vector2.right;
+                        if (isGrounded())
+                            facing = "left";
+                    }
+                }
+                else
+                {
+                    velocity = Vector2.zero;
+                    movementCommands = 0;
+                }
             }
 
-            if (id == EventController.FLY)
+            if (id == EventController.FLY && hasJetpack)
                 isFlying = false;
         }
 
@@ -288,6 +310,15 @@ public class PlayerTurtle : MonoBehaviour
     private bool isGrounded()
     {
         return groundTracker.GetComponent<CollisionTracker>().isColliding();
+    }
+
+    public void SetJetpack(bool value)
+    {
+        hasJetpack = value;
+        if (hasJetpack)
+            jetObject.SetActive(true);
+        else
+            jetObject.SetActive(false);
     }
 
 

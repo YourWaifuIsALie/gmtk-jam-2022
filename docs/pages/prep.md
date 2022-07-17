@@ -1,8 +1,9 @@
 ---
-title: Day -1
+title: Preparation
 date: 2022-09-09
 categories: [blog]
 layout: custom
+order: 1
 ---
 # GMTK Game Jam 2022: {{ page.title }}
 {{ page.date | date: '%B %d, %Y' }}

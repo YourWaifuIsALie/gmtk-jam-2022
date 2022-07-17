@@ -3,6 +3,7 @@ title: It begins
 date: 2022-09-15
 categories: [blog]
 layout: custom
+order: 2
 ---
 # GMTK Game Jam 2022: {{ page.title }}
 {{ page.date | date: '%B %d, %Y' }}

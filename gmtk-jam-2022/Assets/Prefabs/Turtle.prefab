@@ -4892,7 +4892,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &8869045164838787589
 Transform:
   m_ObjectHideFlags: 0
@@ -5188,9 +5188,9 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 1.5, y: 0.2}
+  m_Offset: {x: 1.5, y: 0.4}
   serializedVersion: 2
-  m_Radius: 0.9
+  m_Radius: 0.8
 --- !u!58 &1149720256192405864
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -5204,9 +5204,9 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: -1.5, y: 0.2}
+  m_Offset: {x: -1.5, y: 0.4}
   serializedVersion: 2
-  m_Radius: 0.9
+  m_Radius: 0.8
 --- !u!58 &7998454590877986574
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -5220,7 +5220,7 @@ CircleCollider2D:
   m_IsTrigger: 0
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.5}
+  m_Offset: {x: 0, y: 0.6}
   serializedVersion: 2
   m_Radius: 1
 --- !u!95 &6762534711506516717
@@ -15045,7 +15045,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &3760324212841937862
 Transform:
   m_ObjectHideFlags: 0
