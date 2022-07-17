@@ -3,6 +3,8 @@ TextMesh\ Pro/
 
 # Temporary ignore until properly used
 docs/media/
+Sound/
+*.png
 
 # VSCODE
 .vscode/*

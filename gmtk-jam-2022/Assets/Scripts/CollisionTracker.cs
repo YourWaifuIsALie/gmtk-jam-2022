@@ -12,7 +12,7 @@ public class CollisionTracker : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        Debug.Log(other.gameObject.layer);
+        // Debug.Log(other.gameObject.layer);
         if (other.gameObject != gameObject.transform.root && other.gameObject.layer == LayerMask.NameToLayer("PlayerCollision"))
             collidingObjects.Add(other.gameObject);
     }

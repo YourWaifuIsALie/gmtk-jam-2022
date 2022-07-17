@@ -1,17 +1,36 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
 
 public class PlayerTurtle : MonoBehaviour
 {
     [SerializeField]
     private GameObject groundTracker;
 
+    [SerializeField]
+    private GameObject jetObject;
+
+    [SerializeField]
+    private GameObject jetVector1;
+    [SerializeField]
+    private GameObject jetVector2;
+
+    [SerializeField]
+    private Animator animationController;
+
+    [SerializeField]
+    private ParticleSystem[] particleList;
+
+    [SerializeField]
+    private CinemachineVirtualCamera turtleCamera;
+
     private bool isActive;
     private bool hasJetpack;
     private bool needsImpulse;
     private bool isTilted;
     private bool isFalling;
+    private bool isFlying;
     private float fallCheckWaitTime;
     private int movementCommands;
     private string facing;
@@ -20,11 +39,13 @@ public class PlayerTurtle : MonoBehaviour
     private Vector2 acceleration;
     private Rigidbody2D rigidBody;
     private int FALLWAIT = 2; // How long grounded 'till not falling (i.e. not rolling down a mountain)
+    private int MAXOFFSET = 80;
+    private int MINOFFSET = 20;
 
     void Start()
     {
         isActive = false;
-        hasJetpack = false;
+        hasJetpack = true; // TODO set back to false
         needsImpulse = false;
         isTilted = false;
         isFalling = false;
@@ -62,8 +83,68 @@ public class PlayerTurtle : MonoBehaviour
                 isFalling = false;
                 fallCheckWaitTime = 0;
             }
-
         }
+
+        if (velocity == Vector2.zero)
+        {
+            animationController.SetBool("isWalking", false);
+            EventController.current.SoundEvent($"{ConfigController.SOUNDWALK}", $"{EventController.STOP}", 0.3f, true);
+        }
+        else
+        {
+            animationController.SetBool("isWalking", true);
+            EventController.current.SoundEvent($"{ConfigController.SOUNDWALK}", $"{EventController.PLAY}", 0.3f, true);
+        }
+
+        // Flip for facing
+        if (transform.up.y > 0)  // Upright only
+        {
+            if (facing == "left")
+            {
+                Vector3 facingVector = transform.localScale;
+                facingVector.x = 1;
+                transform.localScale = facingVector;
+            }
+            else
+            {
+                Vector3 facingVector = transform.localScale;
+                facingVector.x = -1;
+                transform.localScale = facingVector;
+            }
+        }
+
+        // Jet
+        if (hasJetpack)
+        {
+            if (isFlying)
+            {
+                foreach (var sfx in particleList)
+                    sfx.Play();
+                animationController.SetBool("isFlying", true);
+                EventController.current.SoundEvent($"{ConfigController.SOUNDENGINE}", $"{EventController.PLAY}", 0.8f, true);
+                // Zoom out while flying
+                var cameraTransposer = turtleCamera.GetCinemachineComponent<CinemachineTransposer>();
+                Vector3 newOffset = cameraTransposer.m_FollowOffset;
+                newOffset.z += newOffset.z < MAXOFFSET ? 0.5f : 0;
+                cameraTransposer.m_FollowOffset = newOffset;
+            }
+            else
+            {
+                foreach (var sfx in particleList)
+                    sfx.Stop();
+                animationController.SetBool("isFlying", false);
+                EventController.current.SoundEvent($"{ConfigController.SOUNDENGINE}", $"{EventController.STOP}", 0.8f, true);
+                // Zoom in while not
+                var cameraTransposer = turtleCamera.GetCinemachineComponent<CinemachineTransposer>();
+                Vector3 newOffset = cameraTransposer.m_FollowOffset;
+                newOffset.z += newOffset.z > MINOFFSET ? -0.2f : 0;
+                cameraTransposer.m_FollowOffset = newOffset;
+            }
+        }
+        else
+        {
+        }
+
     }
 
     private void FixedUpdate()
@@ -77,13 +158,13 @@ public class PlayerTurtle : MonoBehaviour
         }*/
         if (isTilted && !isFalling)
         {
-            rotation = 15f;
+            rotation = 30f;
             // Debug.Log($"Angular Velocity: {rigidBody.angularVelocity}");
             if (Mathf.Abs(rigidBody.angularVelocity) < rotation)
                 if (facing == "left")
-                    rigidBody.AddTorque(12);
+                    rigidBody.AddTorque(20);
                 else
-                    rigidBody.AddTorque(-12);
+                    rigidBody.AddTorque(-20);
 
             if (isGrounded()) // Poor turtle can't hold it
                 if (Mathf.Abs(rigidBody.rotation) > 30)
@@ -106,6 +187,14 @@ public class PlayerTurtle : MonoBehaviour
             else
                 rigidBody.velocity += velocity * 0.05f; // Enough to wobble
 
+        // Jet physics
+        if (isFlying)
+        {
+            var jetForce = jetVector1.transform.position - jetVector2.transform.position;
+            rigidBody.AddForce(jetForce * 2, ForceMode2D.Impulse);
+        }
+        // rigidBody.velocity += acceleration;
+
     }
 
 
@@ -121,40 +210,73 @@ public class PlayerTurtle : MonoBehaviour
                 isTilted = false;
             return;
         }
+
         if (action == EventController.PRESS)
+        {
             movementCommands += 1;
+            if (id == EventController.LEFT)  // Left is right and right is left, oops
+            {
+                velocity = Vector2.right;
+                if (isGrounded())
+                    facing = "left";
+            }
+            else if (id == EventController.RIGHT)
+            {
+                velocity = Vector2.left;
+                if (isGrounded())
+                    facing = "right";
+            }
 
-        if (id == EventController.LEFT)
-            velocity = new Vector2(1, 0);
-        else if (id == EventController.RIGHT)
-            velocity = new Vector2(-1, 0);
-
+            if (id == EventController.FLY)
+                isFlying = true;
+        }
         // if (this.hasJetpack)
 
         if (action == EventController.RELEASE)
         {
             movementCommands -= 1;
             if (movementCommands == 0)
-                velocity = new Vector2(0, 0);
+                velocity = Vector2.zero;
             else if (movementCommands == 1)
             {
                 needsImpulse = true;
                 if (id == EventController.LEFT) // Other button is held, reverse
-                    velocity = new Vector2(-1, 0);
+                {
+                    velocity = Vector2.left;
+                    if (isGrounded())
+                        facing = "right";
+                }
                 else
-                    velocity = new Vector2(1, 0);
+                {
+                    velocity = Vector2.right;
+                    if (isGrounded())
+                        facing = "left";
+                }
             }
             else
             {
-                velocity = new Vector2(0, 0);
+                velocity = Vector2.zero;
                 movementCommands = 0;
             }
+
+            if (id == EventController.FLY)
+                isFlying = false;
         }
 
-        if (velocity.x > 0)
-            facing = "left";
-        else if (velocity.x < 0)
-            facing = "right";
+        if (isFlying)
+        {
+            /*
+            if (facing == "left")
+                acceleration = Vector2.right * 5;
+            else
+                acceleration = Vector2.left * 5;
+            */
+        }
+        else
+        {
+            acceleration = Vector2.zero;
+        }
+
     }
 
     private void ClickEventHandler(string id)

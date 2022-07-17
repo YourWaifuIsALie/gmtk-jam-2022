@@ -15,6 +15,8 @@ public class InputController : MonoBehaviour
         playerInput.actions["Right"].canceled += InputRight;
         playerInput.actions["Up"].started += InputUp;
         playerInput.actions["Up"].canceled += InputUp;
+        playerInput.actions["Fly"].started += InputFly;
+        playerInput.actions["Fly"].canceled += InputFly;
         playerInput.actions["Reset"].started += InputReset;
         playerInput.actions["Reset"].canceled += InputReset;
         playerInput.actions["Click"].performed += InputClick;
@@ -29,6 +31,8 @@ public class InputController : MonoBehaviour
         playerInput.actions["Right"].canceled -= InputRight;
         playerInput.actions["Up"].started -= InputUp;
         playerInput.actions["Up"].canceled -= InputUp;
+        playerInput.actions["Fly"].started -= InputFly;
+        playerInput.actions["Fly"].canceled -= InputFly;
         playerInput.actions["Reset"].started -= InputReset;
         playerInput.actions["Reset"].canceled -= InputReset;
         playerInput.actions["Click"].performed -= InputClick;
@@ -66,6 +70,14 @@ public class InputController : MonoBehaviour
             EventController.current.KeyEvent($"{EventController.RESET}", $"{EventController.PRESS}");
         else
             EventController.current.KeyEvent($"{EventController.RESET}", $"{EventController.RELEASE}");
+    }
+    private void InputFly(InputAction.CallbackContext context)
+    {
+        // Debug.Log($"RESET");
+        if (context.started)
+            EventController.current.KeyEvent($"{EventController.FLY}", $"{EventController.PRESS}");
+        else
+            EventController.current.KeyEvent($"{EventController.FLY}", $"{EventController.RELEASE}");
     }
 
     private void InputClick(InputAction.CallbackContext context)
