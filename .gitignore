@@ -3,8 +3,8 @@ TextMesh\ Pro/
 
 # Temporary ignore until properly used
 Sound/
-*.png
 [Bb]uild*/
+gmtk-jam-2022/**/*.png
 
 # VSCODE
 .vscode/*
